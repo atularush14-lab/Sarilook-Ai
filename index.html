@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SareeLook AI — Virtual Saree Try-On</title>
+  <style>
+    :root {
+      --primary: #800020;
+      --primary-dark: #5a0016;
+      --gold: #d4af37;
+      --bg: #fdf8f5;
+      --card: #ffffff;
+      --text: #2b1d1d;
+      --muted: #6e5a5a;
+      --border: #eadad5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 40px; }
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 18px 16px;
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+    header h1 { font-size: 1.4rem; letter-spacing: 0.5px; }
+    header p { font-size: 0.82rem; opacity: 0.9; margin-top: 4px; color: #ffe8b3; }
+    .container { max-width: 520px; margin: 16px auto; padding: 0 14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(128, 0, 32, 0.05);
+    }
+    .step-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: var(--primary);
+      color: #fff;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+    }
+    .upload-box {
+      border: 2px dashed #c9a79d;
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      background: #fffaf8;
+      cursor: pointer;
+      position: relative;
+    }
+    .upload-box input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .upload-box span { font-size: 0.88rem; color: var(--muted); display: block; }
+    .preview-img {
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid var(--border);
+    }
+    select, input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+      margin-top: 6px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(128, 0, 32, 0.25);
+      transition: opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary {
+      background: #f3e6e2;
+      color: var(--primary);
+      box-shadow: none;
+      margin-top: 8px;
+      font-size: 0.88rem;
+      padding: 10px;
+    }
+    .status {
+      margin-top: 12px;
+      font-size: 0.88rem;
+      text-align: center;
+      color: var(--primary);
+      font-weight: 600;
+      display: none;
+    }
+    #resultCard { display: none; text-align: center; }
+    #resultImage {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 10px;
+      border: 2px solid var(--gold);
+    }
+    .note { font-size: 0.78rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✨ SareeLook AI</h1>
+  <p>तुमच्या फोटोवर कोणतीही साडी व्हर्च्युअल ट्राय करा</p>
+</header>
+
+<div class="container">
+  <!-- API Key Section -->
+  <div class="card">
+    <div class="step-title"><span class="badge">🔑</span> Google Gemini API Key</div>
+    <input type="password" id="apiKeyInput" placeholder="तुमची Gemini API Key इथे पेस्ट करा (AIza...)" />
+    <p class="note">तुमची API Key फक्त तुमच्या फोनवर सुरक्षित सेव्ह राहते.</p>
+  </div>
+
+  <!-- Step 1: User Photo -->
+  <div class="card">
+    <div class="step-title"><span class="badge">1</span> तुमचा फोटो निवडा</div>
+    <div class="upload-box">
+      <span>📸 चेहरा व पूर्ण उभा फोटो निवडा (Tap करा)</span>
+      <input type="file" id="personInput" accept="image/*" />
+      <img id="personPreview" class="preview-img" alt="Person Preview" />
+    </div>
+  </div>
+
+  <!-- Step 2: Saree Photo -->
+  <div class="card">
+    <div class="step-title"><span class="badge">2</span> साडीचा फोटो निवडा</div>
+    <div class="upload-box">
+      <span>🥻 पसंतीच्या साडीचा फोटो निवडा (Tap करा)</span>
+      <input type="file" id="sareeInput" accept="image/*" />
+      <img id="sareePreview" class="preview-img" alt="Saree Preview" />
+    </div>
+  </div>
+
+  <!-- Step 3: Draping Style -->
+  <div class="card">
+    <div class="step-title"><span class="badge">3</span> साडी नेसण्याची स्टाईल</div>
+    <select id="styleSelect">
+      <option value="Traditional Maharashtrian Nivi drape saree with neat pleats and pallu">पारंपारिक निवी साडी (Classic Nivi Drape)</option>
+      <option value="Traditional Nauvari Marathi saree drape">मराठमोळी नऊवारी साडी (Nauvari Style)</option>
+      <option value="Silk Paithani saree with rich golden border and traditional drape">पैठणी साडी लूक (Paithani Silk Look)</option>
+      <option value="Modern party wear seedha pallu saree drape">सीधा पल्लू पार्टी लूक (Seedha Pallu)</option>
+    </select>
+  </div>
+
+  <!-- Generate Button -->
+  <button class="btn" id="generateBtn" onclick="generateSareeLook()">✨ साडी लूक तयार करा</button>
+  <div class="status" id="statusText">⏳ AI तुमचा साडी लूक तयार करत आहे, कृपया १५-२० सेकंद थांबा...</div>
+
+  <!-- Result Section -->
+  <div class="card" id="resultCard">
+    <div class="step-title"><span class="badge">✓</span> तुमचा नवीन साडी लूक!</div>
+    <img id="resultImage" alt="Generated Saree Look" />
+    <button class="btn btn-secondary" onclick="downloadResult()">⬇️ फोटो डाउनलोड करा</button>
+  </div>
+</div>
+
+<script>
+  let personBase64 = null, personMime = null;
+  let sareeBase64 = null, sareeMime = null;
+
+  // Load saved API key
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('sareelook_gemini_key');
+    if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
+  });
+
+  function setupImagePreview(inputId, previewId, callback) {
+    document.getElementById(inputId).addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = document.getElementById(previewId);
+        img.src = evt.target.result;
+        img.style.display = 'block';
+        const parts = evt.target.result.split(',');
+        callback(parts[1], file.type);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  setupImagePreview('personInput', 'personPreview', (b64, mime) => { personBase64 = b64; personMime = mime; });
+  setupImagePreview('sareeInput', 'sareePreview', (b64, mime) => { sareeBase64 = b64; sareeMime = mime; });
+
+  async function generateSareeLook() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) { alert('कृपया तुमची Google Gemini API Key टाका.'); return; }
+    if (!personBase64 || !sareeBase64) { alert('कृपया तुमचा फोटो आणि साडीचा फोटो दोन्ही निवडा.'); return; }
+
+    localStorage.setItem('sareelook_gemini_key', apiKey);
+    const style = document.getElementById('styleSelect').value;
+    const btn = document.getElementById('generateBtn');
+    const status = document.getElementById('statusText');
+    const resultCard = document.getElementById('resultCard');
+
+    btn.disabled = true;
+    status.style.display = 'block';
+    status.textContent = '⏳ AI तुमचा साडी लूक तयार करत आहे, कृपया १५-२० सेकंद थांबा...';
+    resultCard.style.display = 'none';
+
+    const prompt = `Dress the person from the first image in the exact saree shown in the second image, styled in a ${style}. Keep the person's face, skin tone, hair, expression, body posture, and background completely natural and unchanged. Ensure the saree fabric texture, border, and colors from the second image are accurately draped with realistic folds and lighting.`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: personMime, data: personBase64 } },
+              { inlineData: { mimeType: sareeMime, data: sareeBase64 } }
+            ]
+          }],
+          generationConfig: {
+            responseModalities: ["IMAGE"]
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'API त्रुटी आली आहे. कृपया तुमची API Key तपासा.');
+      }
+
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      const imagePart = parts.find(p => p.inlineData);
+
+      if (!imagePart) {
+        throw new Error('फोटो तयार होऊ शकला नाही. कृपया दुसरा स्पष्ट फोटो वापरून पुन्हा प्रयत्न करा.');
+      }
+
+      const finalSrc = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+      document.getElementById('resultImage').src = finalSrc;
+      resultCard.style.display = 'block';
+      status.style.display = 'none';
+      resultCard.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+      status.textContent = '❌ त्रुटी: ' + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function downloadResult() {
+    const img = document.getElementById('resultImage');
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'SareeLook-AI.png';
+    a.click();
+  }
+</script>
+</body>
+</html>
