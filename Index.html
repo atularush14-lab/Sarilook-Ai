@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#9c1c4e" />
+  <title>SareeLook AI</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: #fdf6f8; color: #222; padding: 14px; }
+    .container { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { text-align: center; color: #9c1c4e; font-size: 22px; margin: 4px 0 16px; }
+    .box { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #333; }
+    input[type="file"], select { width: 100%; padding: 11px; border: 1.5px solid #e0c8d0; border-radius: 12px; font-size: 14px; background: #fff9fb; }
+    .preview { width: 100%; max-height: 220px; object-fit: contain; margin-top: 8px; border-radius: 12px; display: none; border: 1px solid #eee; }
+    button { width: 100%; padding: 15px; background: linear-gradient(135deg, #9c1c4e, #c2185b); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 12px rgba(156,28,78,0.3); }
+    button:disabled { background: #ccc; box-shadow: none; }
+    #status { text-align: center; margin-top: 12px; font-size: 14px; color: #9c1c4e; font-weight: 600; word-break: break-word; }
+    #resultBox { margin-top: 16px; text-align: center; display: none; }
+    #resultImg { width: 100%; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    .download-btn { display: inline-block; margin-top: 12px; padding: 12px 24px; background: #1e7e34; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✨ SareeLook AI</h1>
+
+    <div class="box">
+      <label>१. तुमचा फोटो निवडा (Your Photo):</label>
+      <input type="file" id="userPhoto" accept="image/*" />
+      <img id="userPreview" class="preview" />
+    </div>
+
+    <div class="box">
+      <label>२. साडीचा फोटो निवडा (Saree Photo):</label>
+      <input type="file" id="sareePhoto" accept="image/*" />
+      <img id="sareePreview" class="preview" />
+    </div>
+
+    <div class="box">
+      <label>३. साडी नेसण्याची पद्धत (Style):</label>
+      <select id="drapeStyle">
+        <option value="traditional Marathi Nauvari saree with pleats and pallu">पारंपारिक नऊवारी साडी (Nauvari)</option>
+        <option value="traditional Indian Paithani or Kanjeevaram silk saree with detailed zari border and pallu">पारंपारिक पैठणी / सिल्क साडी</option>
+        <option value="modern designer saree with matching blouse">मॉडर्न डिझायनर साडी</option>
+      </select>
+    </div>
+
+    <button id="generateBtn" onclick="generateSaree()">✨ खरी साडी ट्राय करा</button>
+    <div id="status"></div>
+
+    <div id="resultBox">
+      <img id="resultImg" />
+      <br />
+      <a id="downloadLink" class="download-btn" download="SareeLook-AI.png">⬇️ फोटो डाउनलोड करा</a>
+    </div>
+  </div>
+
+  <script>
+    // इथे तुमची AQ... ने सुरू होणारी API Key पेस्ट करा:
+    const GEMINI_API_KEY = "AQ.Ab8RN6IgJby4CiXTUu1kM7zbr79r3DTMpAGmopeJJBXivAoOqw";
+
+    function setupPreview(inputId, imgId) {
+      document.getElementById(inputId).addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const img = document.getElementById(imgId);
+          img.src = URL.createObjectURL(file);
+          img.style.display = "block";
+        }
+      });
+    }
+    setupPreview("userPhoto", "userPreview");
+    setupPreview("sareePhoto", "sareePreview");
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function generateSaree() {
+      const userFile = document.getElementById("userPhoto").files[0];
+      const sareeFile = document.getElementById("sareePhoto").files[0];
+      const style = document.getElementById("drapeStyle").value;
+      const status = document.getElementById("status");
+      const btn = document.getElementById("generateBtn");
+
+      if (!userFile || !sareeFile) return alert("कृपया तुमचा आणि साडीचा असे दोन्ही फोटो निवडा!");
+
+      btn.disabled = true;
+      status.innerText = "⏳ AI खऱ्या साडीची नक्षी आणि काठ तयार करत आहे... (१५ सेकंद थांबा)";
+      document.getElementById("resultBox").style.display = "none";
+
+      try {
+        const userBase64 = await fileToBase64(userFile);
+        const sareeBase64 = await fileToBase64(sareeFile);
+
+        const promptText = `Virtual try-on photography: Take the exact woman from Image 1, keeping her exact face, facial features, skin tone, hairstyle, body proportions, and background completely unchanged. Dress her in the EXACT saree shown in Image 2, draped naturally as a ${style}. CRITICAL INSTRUCTIONS: Copy the exact fabric texture, intricate weaving motifs, zari border design, pallu pattern, prints, embroidery, and exact color shades from Image 2 onto the draped saree. Do NOT replace the saree with a plain solid color. Add a matching traditional blouse, realistic fabric folds, natural pleats, and authentic lighting shadows so it looks like a real DSLR photograph.`;
+
+        const url = `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              role: "user",
+              parts: [
+                { text: promptText },
+                { inlineData: { mimeType: userFile.type || "image/jpeg", data: userBase64 } },
+                { inlineData: { mimeType: sareeFile.type || "image/jpeg", data: sareeBase64 } }
+              ]
+            }],
+            generationConfig: { responseModalities: ["IMAGE"] }
+          })
+        });
+
+        const rawText = await res.text();
+        const data = JSON.parse(rawText);
+
+        if (!res.ok) {
+          const errMsg = Array.isArray(data) ? data[0]?.error?.message : data?.error?.message;
+          throw new Error(errMsg || ("HTTP " + res.status));
+        }
+
+        const imgPart = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+        if (!imgPart) throw new Error("फोटो तयार होऊ शकला नाही, कृपया पुन्हा प्रयत्न करा.");
+
+        const imgDataUrl = `data:${imgPart.inlineData.mimeType || "image/png"};base64,${imgPart.inlineData.data}`;
+        document.getElementById("resultImg").src = imgDataUrl;
+        document.getElementById("downloadLink").href = imgDataUrl;
+        document.getElementById("resultBox").style.display = "block";
+        status.innerText = "✅ तयार आहे!";
+      } catch (err) {
+        status.innerText = "❌ एरर: " + (err.message || String(err));
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
