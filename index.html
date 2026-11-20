@@ -142,14 +142,12 @@
 </header>
 
 <div class="container">
-  <!-- API Key Section -->
   <div class="card">
     <div class="step-title"><span class="badge">🔑</span> Google Gemini API Key</div>
-    <input type="password" id="apiKeyInput" placeholder="तुमची Gemini API Key इथे पेस्ट करा (AIza...)" />
+    <input type="password" id="apiKeyInput" placeholder="तुमची Gemini API Key इथे पेस्ट करा" />
     <p class="note">तुमची API Key फक्त तुमच्या फोनवर सुरक्षित सेव्ह राहते.</p>
   </div>
 
-  <!-- Step 1: User Photo -->
   <div class="card">
     <div class="step-title"><span class="badge">1</span> तुमचा फोटो निवडा</div>
     <div class="upload-box">
@@ -159,7 +157,6 @@
     </div>
   </div>
 
-  <!-- Step 2: Saree Photo -->
   <div class="card">
     <div class="step-title"><span class="badge">2</span> साडीचा फोटो निवडा</div>
     <div class="upload-box">
@@ -169,7 +166,6 @@
     </div>
   </div>
 
-  <!-- Step 3: Draping Style -->
   <div class="card">
     <div class="step-title"><span class="badge">3</span> साडी नेसण्याची स्टाईल</div>
     <select id="styleSelect">
@@ -180,11 +176,9 @@
     </select>
   </div>
 
-  <!-- Generate Button -->
   <button class="btn" id="generateBtn" onclick="generateSareeLook()">✨ साडी लूक तयार करा</button>
   <div class="status" id="statusText">⏳ AI तुमचा साडी लूक तयार करत आहे, कृपया १५-२० सेकंद थांबा...</div>
 
-  <!-- Result Section -->
   <div class="card" id="resultCard">
     <div class="step-title"><span class="badge">✓</span> तुमचा नवीन साडी लूक!</div>
     <img id="resultImage" alt="Generated Saree Look" />
@@ -196,7 +190,6 @@
   let personBase64 = null, personMime = null;
   let sareeBase64 = null, sareeMime = null;
 
-  // Load saved API key
   window.addEventListener('DOMContentLoaded', () => {
     const savedKey = localStorage.getItem('sareelook_gemini_key');
     if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
@@ -240,9 +233,12 @@
     const prompt = `Dress the person from the first image in the exact saree shown in the second image, styled in a ${style}. Keep the person's face, skin tone, hair, expression, body posture, and background completely natural and unchanged. Ensure the saree fabric texture, border, and colors from the second image are accurately draped with realistic folds and lighting.`;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
         body: JSON.stringify({
           contents: [{
             parts: [
